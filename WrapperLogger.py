@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import torch
 
@@ -11,7 +12,7 @@ def tensor_to_scale(dict: dict):
 
 
 class WrapperLogger():
-    def __init__(self, saving_folder, log_name='log.csv') -> None:
+    def __init__(self, saving_folder, log_name) -> None:
         self.saving_folder = saving_folder
         self.log = pd.DataFrame()  # the main log
         self.epoch_log = pd.DataFrame()  # log that caches current epoch data

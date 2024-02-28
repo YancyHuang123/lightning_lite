@@ -1,1 +1,1 @@
-Lightning-lite is a project that realize Pytorch-lightning in minimal, readable and customizable codes.
+Lightning-lite is a project that realizes Pytorch-lightning in minimal, readable and customizable codes.

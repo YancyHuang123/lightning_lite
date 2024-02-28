@@ -13,7 +13,7 @@ from .WrapperTimer import WrapperTimer
 
 
 class WrapperTrainer():
-    def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, save_folder_path='lite_logs',saving_folder=None) -> None:
+    def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, save_folder_path='lite_logs',saving_folder=None,log_name='log.csv') -> None:
         super().__init__()
         self.max_epochs = max_epochs
         self.acceletator = accelerator
@@ -31,7 +31,7 @@ class WrapperTrainer():
         '''
         if saving_folder is None:
             self.create_saving_folder()
-        self.logger = WrapperLogger(self.save_folder)
+        self.logger = WrapperLogger(self.save_folder,log_name=log_name)
         self.timer = WrapperTimer()
         self.printer = WrapperPrinter(output_interval, max_epochs)
 
