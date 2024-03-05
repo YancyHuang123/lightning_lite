@@ -13,7 +13,7 @@ from .WrapperTimer import WrapperTimer
 
 
 class WrapperTrainer():
-    def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, save_folder_path='lite_logs',saving_folder=None,log_name='log.csv') -> None:
+    def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, save_folder_path='lite_logs',saving_folder=None,log_name='log.csv',distribution=True) -> None:
         super().__init__()
         self.max_epochs = max_epochs
         self.acceletator = accelerator
@@ -22,6 +22,7 @@ class WrapperTrainer():
         self.save_folder = saving_folder  # folder keeps current training log
         self.step_idx = 0
         self.output_interval = output_interval
+        self.distribution=distribution
 
         '''
         the three key elements to a deep learning experiment: 
@@ -101,7 +102,7 @@ class WrapperTrainer():
             test_results = []
             for batch_idx, batch in enumerate(test_loader):
                 batch = self._to_device(batch, model.device)
-                # !!DO NOT return tensors directly, this can lead to gpu menory shortage !!
+                # !!DO NOT return tensors directly, this can lead to gpu menory shortage !! use a.item() instead
                 result = model.test_step(batch, batch_idx)
                 test_results.append(result)
                 self.printer.batch_output(
@@ -133,7 +134,10 @@ class WrapperTrainer():
                 value = getattr(model, key)
                 if key not in model.cuda_ignore:
                     if key not in model.distribution_ignore:
-                        value = nn.DataParallel(value).to('cuda')
+                        if self.distribution== False:
+                            value =value.to('cuda')
+                        else: 
+                            value = nn.DataParallel(value).to('cuda')
                     else:
                         value = value.to('cuda')
                     setattr(model, key, value)
