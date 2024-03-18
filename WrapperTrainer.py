@@ -25,10 +25,10 @@ class WrapperTrainer():
         self.distribution=distribution
 
         '''
-        the three key elements to a deep learning experiment: 
+        the three fundermetal elements to a deep learning experiment: 
         1. timer: gives you the full control of how long the experiment will take
-        2. printer: gives you the immediate info of current experiment
-        3. logger: gives you full info of the whole experiment
+        2. printer: gives you the real-time info of current experiment
+        3. logger: gives you full info of the whole experiment for later review
         '''
         if saving_folder is None:
             self.create_saving_folder()
@@ -44,7 +44,7 @@ class WrapperTrainer():
 
         # epoch loop
         self.timer.training_start()
-        print('Training started')
+        print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nTraining started\n')
         for epoch_idx in range(self.max_epochs):
             model.current_epoch = epoch_idx
             self.timer.epoch_start()
@@ -62,7 +62,7 @@ class WrapperTrainer():
 
                 # due to the potential display error of progress bar, use standard output is a wiser option.
                 self.printer.batch_output(
-                    'trining', epoch_idx, batch_idx, trainset_len, self.logger.last_log)
+                    'Training', epoch_idx, batch_idx, trainset_len, self.logger.last_log)
             model.on_training_end(training_results)
 
             # validation batch loop
@@ -75,7 +75,7 @@ class WrapperTrainer():
                     result = model.validation_step(batch, batch_idx)
                     val_results.append(result)
                     self.printer.batch_output(
-                        'validating', epoch_idx, batch_idx, valset_len, self.logger.last_log)
+                        'Validating', epoch_idx, batch_idx, valset_len, self.logger.last_log)
                 model.on_validation_end(val_results)
 
             # epoch end
@@ -97,6 +97,10 @@ class WrapperTrainer():
         model = self.model_distribute(model)
         model.logger = self.logger
         testset_len = len(test_loader)
+
+        # test start
+        self.timer.training_start()
+        print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nTest started\n')
         with torch.no_grad():
             model.eval()
             test_results = []
@@ -106,11 +110,16 @@ class WrapperTrainer():
                 result = model.test_step(batch, batch_idx)
                 test_results.append(result)
                 self.printer.batch_output(
-                    'testing', 0, batch_idx, testset_len, self.logger.last_log)
+                    'Testing', 0, batch_idx, testset_len, self.logger.last_log)
             model.on_test_end(test_results)
             self.logger.save_log()
             self.printer.epoch_output(
                 0, 0, self.logger.last_log)
+        
+        # test end
+        self.timer.training_end()
+        self.printer.end_output('Test', self.timer.total_cost)
+
 
     # move batch data to device
     def _to_device(self, batch, device):

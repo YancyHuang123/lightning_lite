@@ -11,7 +11,7 @@ class WrapperPrinter():
     def batch_output(self,phase:str,epoch_idx,batch_idx,loader_len,last_log):
         if batch_idx % self.output_interval == 0:
             print(
-                f'>>>Epoch[{epoch_idx}] {phase} batch:{batch_idx}/{loader_len} {last_log}')
+                f'{phase} Epoch[{epoch_idx}] batch:{batch_idx}/{loader_len} {last_log}')
 
     def epoch_output(self,epoch_idx,epoch_elapse,last_log):
         print(
@@ -19,4 +19,4 @@ class WrapperPrinter():
         
     def end_output(self,phase,consumption):
         print(
-            f'{phase} completed. Time consumption:{consumption/60.:.02f}min')
+            f'\n{phase} completed. Time consumption:{consumption/60.:.02f}min\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
