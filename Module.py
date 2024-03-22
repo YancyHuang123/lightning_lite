@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Optional
 import torch
 import torch.nn as nn
 
-from Wrapper.WrapperLogger import WrapperLogger
+from Wrapper.Logger import WrapperLogger
 
 
 class WrapperModule(nn.Module):

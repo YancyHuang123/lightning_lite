@@ -6,10 +6,10 @@ import time
 import torch
 import torch.nn as nn
 
-from .WrapperPrinter import WrapperPrinter
-from .WrapperModule import WrapperModule
-from .WrapperLogger import WrapperLogger
-from .WrapperTimer import WrapperTimer
+from .Printer import WrapperPrinter
+from .Module import WrapperModule
+from .Logger import WrapperLogger
+from .Timer import WrapperTimer
 
 
 class WrapperTrainer():
