@@ -133,7 +133,7 @@ class WrapperTrainer():
                     item.append(y.to(device))
                 items.append(item)
             else:
-                raise Exception('outputs of dataloader unsupported on cuda')
+                raise Exception('outputs of dataloader unsupported')
         return tuple(items)
 
     def model_distribute(self, model: WrapperModule) -> WrapperModule:
