@@ -11,7 +11,7 @@ def tensor_to_scale(dict: dict):
     return dict
 
 
-class WrapperLogger():
+class Logger():
     def __init__(self, saving_folder, log_name) -> None:
         self.saving_folder = saving_folder
         self.log = pd.DataFrame()  # the main log

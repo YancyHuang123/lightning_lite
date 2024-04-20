@@ -1,7 +1,7 @@
 from abc import abstractclassmethod
 
 
-class WrapperDataModule():
+class DataModule():
     def __init__(self) -> None:
         pass
 

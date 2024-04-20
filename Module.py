@@ -3,7 +3,7 @@ from typing import List, Dict, Union, Optional
 import torch
 import torch.nn as nn
 
-from LightningLite.Logger import WrapperLogger
+from LightningLite.Logger import Logger
 
 
 class WrapperModule(nn.Module):

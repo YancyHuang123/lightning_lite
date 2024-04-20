@@ -6,13 +6,13 @@ import time
 import torch
 import torch.nn as nn
 
-from .Printer import WrapperPrinter
+from .Printer import Printer
 from .Module import WrapperModule
-from .Logger import WrapperLogger
+from .Logger import Logger
 from .Timer import WrapperTimer
 
 
-class WrapperTrainer():
+class Trainer():
     def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, save_folder_path='lite_logs',saving_folder=None,log_name='log.csv',distribution=True) -> None:
         super().__init__()
         self.max_epochs = max_epochs
@@ -32,9 +32,9 @@ class WrapperTrainer():
         '''
         if saving_folder is None:
             self.create_saving_folder()
-        self.logger = WrapperLogger(self.save_folder,log_name=log_name)
+        self.logger = Logger(self.save_folder,log_name=log_name)
         self.timer = WrapperTimer()
-        self.printer = WrapperPrinter(output_interval, max_epochs)
+        self.printer = Printer(output_interval, max_epochs)
 
     def fit(self, model: WrapperModule, train_loader, val_loader=[]):
         model = self.model_distribute(model)  # distribute model to accelerators
