@@ -7,22 +7,22 @@ import torch
 import torch.nn as nn
 
 from .Printer import Printer
-from .Module import WrapperModule
+from .Module import Module
 from .Logger import Logger
 from .Timer import WrapperTimer
 
 
 class Trainer():
-    def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, save_folder_path='lite_logs',saving_folder=None,log_name='log.csv',distribution=True) -> None:
+    def __init__(self, max_epochs, accelerator: str, devices=None, output_interval=50, log_folder='lite_logs', saving_folder=None, log_name='log.csv', distribution=False) -> None:
         super().__init__()
         self.max_epochs = max_epochs
         self.acceletator = accelerator
         self.devices = devices
-        self.save_folder_path = save_folder_path  # folder keeps all training logs
-        self.save_folder = saving_folder  # folder keeps current training log
+        self.log_folder = log_folder  # folder keeps all training logs
+        self.cur_log_folder = saving_folder  # folder keeps current training log
         self.step_idx = 0
         self.output_interval = output_interval
-        self.distribution=distribution
+        self.distribution = distribution
 
         '''
         the three fundermetal elements to a deep learning experiment: 
@@ -32,11 +32,11 @@ class Trainer():
         '''
         if saving_folder is None:
             self.create_saving_folder()
-        self.logger = Logger(self.save_folder,log_name=log_name)
+        self.logger = Logger(self.cur_log_folder, log_name=log_name)
         self.timer = WrapperTimer()
         self.printer = Printer(output_interval, max_epochs)
 
-    def fit(self, model: WrapperModule, train_loader, val_loader=[]):
+    def fit(self, model: Module, train_loader, val_loader=[]):
         model = self.model_distribute(model)  # distribute model to accelerators
         model.logger = self.logger  # type:ignore
         trainset_len = len(train_loader)
@@ -58,7 +58,7 @@ class Trainer():
                 result = model.training_step(batch, batch_idx)
                 training_results.append(result)
                 self.step_idx += 1
-                model.current_step=self.step_idx
+                model.current_step = self.step_idx
 
                 # due to the potential display error of progress bar, use standard output is a wiser option.
                 self.printer.batch_output(
@@ -83,7 +83,7 @@ class Trainer():
 
             self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
             self.logger.save_log()
-            model.save(self.save_folder)
+            model.save(self.cur_log_folder)
             self.timer.epoch_end()
             self.printer.epoch_output(
                 epoch_idx, self.timer.epoch_cost, self.logger.last_log)
@@ -93,7 +93,7 @@ class Trainer():
         self.timer.training_end()
         self.printer.end_output('Traning', self.timer.total_cost)
 
-    def test(self,model,test_loader):
+    def test(self, model, test_loader):
         model = self.model_distribute(model)
         model.logger = self.logger
         testset_len = len(test_loader)
@@ -115,14 +115,16 @@ class Trainer():
             self.logger.save_log()
             self.printer.epoch_output(
                 0, 0, self.logger.last_log)
-        
+
         # test end
         self.timer.training_end()
         self.printer.end_output('Test', self.timer.total_cost)
 
-
-    # move batch data to device
     def _to_device(self, batch, device):
+        ''' Move batch data to device automatically
+            batch: should be either in the following forms -- tensor / [tensor1, tensor2,...] / [[tensor1,tensor2..],[tensor1,tensor2..],...]
+            return the same form of batch with all tensor on the dedicated device
+        '''
         items = []
         for x in batch:
             if torch.is_tensor(x):
@@ -134,18 +136,18 @@ class Trainer():
                 items.append(item)
             else:
                 raise Exception('outputs of dataloader unsupported')
-        return tuple(items)
+        return tuple(items) if len(items) != 1 else items[0]
 
-    def model_distribute(self, model: WrapperModule) -> WrapperModule:
+    def model_distribute(self, model: Module) -> Module:
         if self.acceletator == 'gpu':
             model.device = 'cuda'
             for key in model._modules:
                 value = getattr(model, key)
                 if key not in model.cuda_ignore:
                     if key not in model.distribution_ignore:
-                        if self.distribution== False:
-                            value =value.to('cuda')
-                        else: 
+                        if self.distribution == False:
+                            value = value.to('cuda')
+                        else:
                             value = nn.DataParallel(value).to('cuda')
                     else:
                         value = value.to('cuda')
@@ -154,7 +156,7 @@ class Trainer():
 
     def create_saving_folder(self):
         time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        folder = self.save_folder_path
+        folder = self.log_folder
         os.makedirs(f'{folder}', exist_ok=True)
         os.mkdir(f"{folder}/{time}")
-        self.save_folder = f"{folder}/{time}"
+        self.cur_log_folder = f"{folder}/{time}"

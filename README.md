@@ -11,7 +11,13 @@ LightningLite is a project that realizes Pytorch-lightning in minimal, readable 
 
 ## How it works
 
+## Recommended folder structure
 
+- datasets
+- LightningLite
+- models
+- preprocess
+- utils
 
 ## Installation
 

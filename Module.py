@@ -15,6 +15,7 @@ class Module(nn.Module):
         # save the names of attributes that you don't want to distribute to mutiple devices
         self.distribution_ignore = []
         self.cuda_ignore = []  # save the attributes that you don't want to move to cuda
+        self.logger = None
 
     def save(self, save_folder):
         torch.save(self.state_dict(), f'{save_folder}/model.pt')
