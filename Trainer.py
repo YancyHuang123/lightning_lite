@@ -9,7 +9,7 @@ import torch.nn as nn
 from .Printer import Printer
 from .Module import Module
 from .Logger import Logger
-from .Timer import WrapperTimer
+from .Timer import Timer
 
 
 class Trainer():
@@ -33,97 +33,136 @@ class Trainer():
         if saving_folder is None:
             self.create_saving_folder()
         self.logger = Logger(self.cur_log_folder, log_name=log_name)
-        self.timer = WrapperTimer()
+        self.timer = Timer()
         self.printer = Printer(output_interval, max_epochs)
 
     def fit(self, model: Module, train_loader, val_loader=[]):
-        model = self.model_distribute(model)  # distribute model to accelerators
-        model.logger = self.logger  # type:ignore
-        trainset_len = len(train_loader)
-        valset_len = len(val_loader)
+        # distribute model to accelerators
+        model = self.model_distribute(model)
+        model.logger = self.logger
 
         # epoch loop
-        self.timer.training_start()
-        print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nTraining started\n')
+        self.timer.stage_start()
+        print('\n'+'>'*10+'Train started\n')
         for epoch_idx in range(self.max_epochs):
             model.current_epoch = epoch_idx
             self.timer.epoch_start()
 
-            # training batch loop
-            model.train()
-            training_results = []
-            for batch_idx, batch in enumerate(train_loader):
-                batch = self._to_device(batch, model.device)
-                # DO NOT return tensors directly, this can lead to gpu menory shortage !!
-                result = model.training_step(batch, batch_idx)
-                training_results.append(result)
-                self.step_idx += 1
-                model.current_step = self.step_idx
+            train_epoch_results = []
+            train_epoch_results.append(self._epoch_step(
+                model, epoch_idx, train_loader, 'train'))
 
-                # due to the potential display error of progress bar, use standard output is a wiser option.
-                self.printer.batch_output(
-                    'Training', epoch_idx, batch_idx, trainset_len, self.logger.last_log)
-            model.on_training_end(training_results)
+            val_epoch_results = []
+            train_epoch_results.append(self._epoch_step(
+                model, epoch_idx, val_loader, 'validation'))
 
-            # validation batch loop
-            with torch.no_grad():
-                model.eval()
-                val_results = []
-                for batch_idx, batch in enumerate(val_loader):
-                    batch = self._to_device(batch, model.device)
-                    # !!DO NOT return tensors directly, this can lead to gpu menory shortage !!
-                    result = model.validation_step(batch, batch_idx)
-                    val_results.append(result)
-                    self.printer.batch_output(
-                        'Validating', epoch_idx, batch_idx, valset_len, self.logger.last_log)
-                model.on_validation_end(val_results)
+            # train epoch end hook
+            model.on_train_epoch_end(train_epoch_results, val_epoch_results)
 
-            # epoch end
-            model.on_epoch_end(training_results, val_results)
+            self._epoch_end_process(model, epoch_idx)
 
-            self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
-            self.logger.save_log()
-            model.save(self.cur_log_folder)
-            self.timer.epoch_end()
-            self.printer.epoch_output(
-                epoch_idx, self.timer.epoch_cost, self.logger.last_log)
-
-        # training end
-        model.on_training_end()
-        self.timer.training_end()
+        # train end hook
+        model.on_train_end()
+        self.timer.stage_end()
         self.printer.end_output('Traning', self.timer.total_cost)
 
     def test(self, model, test_loader):
         model = self.model_distribute(model)
         model.logger = self.logger
-        testset_len = len(test_loader)
 
         # test start
-        self.timer.training_start()
+        self.timer.stage_start()
+        print('\n'+'>'*10+'Test started\n')
+        for epoch_idx in range(self.max_epochs):
+            model.current_epoch = epoch_idx
+            self.timer.epoch_start()
+
+            test_epoch_results = []
+            test_epoch_results.append(self._epoch_step(model, epoch_idx, test_loader,
+                                                       'test'))
+
+            # test epoch end hook
+            model.on_test_epoch_end(test_epoch_results)
+
+            self._epoch_end_process(model, epoch_idx)
+
+        # train end hook
+        self._stage_end_process(model, 'test')
+
+    def _stage_end_process(self, model, stage):
+        model.on_test_end()
+        self.timer.stage_end()
+        self.printer.end_output(stage, self.timer.total_cost)
+
+    def _epoch_end_process(self, model, epoch_idx):
+        '''logging, printing, setting timer at the end of epoch'''
+        self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
+        self.logger.save_log()
+        model.save(self.cur_log_folder)
+        self.timer.epoch_end()
+        self.printer.epoch_output(
+            epoch_idx, self.timer.epoch_cost, self.logger.last_log)
+
+    def _epoch_step(self, model, epoch_idx, dataset, stage):
+        if stage == 'train':
+            torch.set_grad_enabled(False)
+            model.eval()
+        else:
+            model.train()
+
+        dataset_len = len(dataset)
+        epoch_results = []
+        for batch_idx, batch in enumerate(dataset):
+
+            batch_output = self._batch_step(
+                model, epoch_idx, dataset_len, batch_idx, batch, stage)
+            epoch_results.append(batch_output)
+
+            # batch end hook
+            model.getattr(f'on_{stage}_batch_end')(batch_output)
+
+        torch.set_grad_enabled(True)
+
+    def _batch_step(self, model, epoch_idx, dataset_len, batch_idx, batch, stage):
+        batch = self._to_device(batch, model.device)
+        # DO NOT return tensors directly, this can lead to gpu menory shortage !!
+        result = model.training_step(batch, batch_idx)
+        self.step_idx += 1
+        model.current_step = self.step_idx
+        self.printer.batch_output(
+            stage, epoch_idx, batch_idx, dataset_len, self.logger.last_log)
+        return result
+
+    def predict(self, model, predict_loader):
+        model = self.model_distribute(model)
+        model.logger = self.logger
+        predictset_len = len(predict_loader)
+
+        # test start
+        self.timer.stage_start()
         print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\nTest started\n')
         with torch.no_grad():
             model.eval()
-            test_results = []
-            for batch_idx, batch in enumerate(test_loader):
+            predict_results = []
+            for batch_idx, batch in enumerate(predict_loader):
                 batch = self._to_device(batch, model.device)
                 # !!DO NOT return tensors directly, this can lead to gpu menory shortage !! use a.item() instead
-                result = model.test_step(batch, batch_idx)
-                test_results.append(result)
+                result = model.predict_step(batch, batch_idx)
+                predict_results.append(result)
                 self.printer.batch_output(
-                    'Testing', 0, batch_idx, testset_len, self.logger.last_log)
-            model.on_test_end(test_results)
+                    'Predicting', 0, batch_idx, predictset_len, self.logger.last_log)
+            model.on_test_end(predict_results)
             self.logger.save_log()
             self.printer.epoch_output(
                 0, 0, self.logger.last_log)
-
-        # test end
-        self.timer.training_end()
-        self.printer.end_output('Test', self.timer.total_cost)
+        # prediction end
+        self.timer.stage_end()
+        self.printer.end_output('Prediction', self.timer.total_cost)
 
     def _to_device(self, batch, device):
         ''' Move batch data to device automatically
-            batch: should be either in the following forms -- tensor / [tensor1, tensor2,...] / [[tensor1,tensor2..],[tensor1,tensor2..],...]
-            return the same form of batch with all tensor on the dedicated device
+            batch: should be either of the following forms -- tensor / [tensor1, tensor2,...] / [[tensor1,tensor2..],[tensor1,tensor2..],...]
+            return the same form of batch data with all tensor on the dedicated device
         '''
         items = []
         for x in batch:

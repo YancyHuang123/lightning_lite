@@ -32,11 +32,19 @@ class Module(nn.Module):
         pass
 
     @abstractmethod
+    def on_train_epoch_end(self, training_results: Optional[List] = None, val_results: Optional[List] = None):
+        pass
+
+    @abstractmethod
     def validation_step(self, batch, batch_idx):
         pass
 
     @abstractmethod
-    def on_epoch_end(self, training_results: Optional[List] = None, val_results: Optional[List] = None):
+    def on_validation_epoch_end(self, training_results: Optional[List] = None, val_results: Optional[List] = None):
+        pass
+
+    @abstractmethod
+    def on_test_epoch_end(self, training_results: Optional[List] = None, val_results: Optional[List] = None):
         pass
 
     @abstractmethod
