@@ -78,6 +78,11 @@ class Module(nn.Module):
     def on_test_end(self, results):
         pass
 
+    '''predict'''
+    @abstractmethod
+    def predict_step(self, X):
+        pass
+
     def log_dict(self, dict: Dict, on_step=False, on_epoch=True, prog_bar=True):
         if on_epoch:
             self.logger.add_epoch_log(dict)

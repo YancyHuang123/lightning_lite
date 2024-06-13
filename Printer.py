@@ -30,4 +30,4 @@ class Printer():
 
     def stage_end_output(self, phase, consumption):
         print(
-            f'\n{phase.capitalize()} completed. Time consumption:{consumption/60.:.02f}min\n{'>'*40}\n')
+            f'\n{phase.capitalize()} completed. Time consumption:{consumption/60.:.02f}min\n{'>'*45}\n')

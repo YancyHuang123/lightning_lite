@@ -71,6 +71,11 @@ class Trainer():
 
         self._stage_end_process(model, 'test')
 
+    def predict(self, model, X):
+        self._stage_start_process(model, 'prediction')
+        pred_result = model.predict_step(X)
+        return pred_result
+
     def _stage_start_process(self, model, stage):
         # distribute model to accelerators
         model = model_distribute(model, self.device, self.distribution)
