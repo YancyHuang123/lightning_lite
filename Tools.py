@@ -5,7 +5,7 @@ import torch.nn as nn
 from .Module import Module
 
 
-def to_device(self, batch, device):
+def to_device(batch, device):
     ''' Move batch data to device automatically
         batch: should be either of the following forms -- tensor / [tensor1, tensor2,...] / [[tensor1,tensor2..],[tensor1,tensor2..],...]
         return the same form of batch data with all tensor on the dedicated device
@@ -24,14 +24,15 @@ def to_device(self, batch, device):
     return tuple(items) if len(items) != 1 else items[0]
 
 
-def model_distribute(self, model: Module) -> Module:
-    if self.acceletator == 'gpu':
+def model_distribute(model: Module, device, distribution) -> Module:
+    '''move and distribute model to device(s)'''
+    if device == 'gpu':
         model.device = 'cuda'
         for key in model._modules:
             value = getattr(model, key)
             if key not in model.cuda_ignore:
                 if key not in model.distribution_ignore:
-                    if self.distribution == False:
+                    if distribution == False:
                         value = value.to('cuda')
                     else:
                         value = nn.DataParallel(value).to('cuda')

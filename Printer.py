@@ -21,7 +21,7 @@ class Printer():
         log = self.format_control(last_log)
         if batch_idx % self.output_interval == 0:
             print(
-                f"{phase} Epoch[{epoch_idx}] batch:{batch_idx}/{loader_len} {log}")
+                f"{phase.capitalize()} Epoch[{epoch_idx}] batch:{batch_idx}/{loader_len} {log}")
 
     def epoch_end_output(self, epoch_idx, epoch_elapse, last_log):
         log = self.format_control(last_log)
@@ -30,4 +30,4 @@ class Printer():
 
     def stage_end_output(self, phase, consumption):
         print(
-            f'\n{phase} completed. Time consumption:{consumption/60.:.02f}min\n{'>'*10}\n')
+            f'\n{phase.capitalize()} completed. Time consumption:{consumption/60.:.02f}min\n{'>'*40}\n')

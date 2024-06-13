@@ -27,8 +27,13 @@ class Module(nn.Module):
                       v in state_dict.items()}
         self.load_state_dict(state_dict)
 
+    '''training'''
     @abstractmethod
     def training_step(self, batch, batch_idx):
+        pass
+
+    @abstractmethod
+    def on_train_batch_end(self, batch_result):
         pass
 
     @abstractmethod
@@ -36,7 +41,16 @@ class Module(nn.Module):
         pass
 
     @abstractmethod
+    def on_train_end(self, results: Optional[List] = None):
+        pass
+
+    '''validation'''
+    @abstractmethod
     def validation_step(self, batch, batch_idx):
+        pass
+
+    @abstractmethod
+    def on_validation_batch_end(self, batch_result):
         pass
 
     @abstractmethod
@@ -44,31 +58,24 @@ class Module(nn.Module):
         pass
 
     @abstractmethod
-    def on_test_epoch_end(self, training_results: Optional[List] = None, val_results: Optional[List] = None):
-        pass
-
-    @abstractmethod
     def on_validation_end(self, results: Optional[List] = None):
         pass
 
-    @abstractmethod
-    def on_training_end(self, results: Optional[List] = None):
-        pass
-
+    '''test'''
     @abstractmethod
     def test_step(self, batch, batch_idx):
         pass
 
     @abstractmethod
+    def on_test_batch_end(self, batch_result):
+        pass
+
+    @abstractmethod
+    def on_test_epoch_end(self, training_results: Optional[List] = None, val_results: Optional[List] = None):
+        pass
+
+    @abstractmethod
     def on_test_end(self, results):
-        pass
-
-    @abstractmethod
-    def configure_optimizers(self):
-        pass
-
-    @abstractmethod
-    def configure_losses(self):
         pass
 
     def log_dict(self, dict: Dict, on_step=False, on_epoch=True, prog_bar=True):

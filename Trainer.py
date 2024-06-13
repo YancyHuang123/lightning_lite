@@ -14,23 +14,21 @@ from .Tools import to_device, model_distribute
 
 
 class Trainer():
-    def __init__(self, max_epochs, accelerator: str, devices=None, log_every_n_steps=50, log_folder='lite_logs', saving_folder=None, log_name='log.csv', distribution=False) -> None:
-        super().__init__()
+    def __init__(self, max_epochs, device='cpu', distribution=False, log_every_n_steps=50, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
+        '''
+        the three fundermetal elements to a deep learning experiment: 
+        1. timer: gives you the full control of how long the experiment takes
+        2. printer: tells you the real-time info of current experiment
+        3. logger: stores full info of the whole experiment for later review
+        '''
         self.max_epochs = max_epochs
-        self.acceletator = accelerator
-        self.devices = devices
+        self.device = device
         self.log_folder = log_folder  # folder keeping all training logs
         self.cur_log_folder = saving_folder  # folder  keeping current training log
         self.step_idx = 0
         self.log_every_n_steps = log_every_n_steps
         self.distribution = distribution
 
-        '''
-        the three fundermetal elements to a deep learning experiment: 
-        1. timer: gives you the full control of how long the experiment will take
-        2. printer: gives you the real-time info of current experiment
-        3. logger: gives you full info of the whole experiment for later review
-        '''
         if saving_folder is None:
             self.create_saving_folder()
         self.logger = Logger(self.cur_log_folder, log_name=log_name)
@@ -53,7 +51,6 @@ class Trainer():
                 model, epoch_idx, val_loader, 'validation'))
 
             model.on_train_epoch_end(train_epoch_results, val_epoch_results)
-
             self._epoch_end_process(model, epoch_idx)
 
         self._stage_end_process(model, 'train')
@@ -76,13 +73,13 @@ class Trainer():
 
     def _stage_start_process(self, model, stage):
         # distribute model to accelerators
-        model = self.model_distribute(model)
+        model = model_distribute(model, self.device, self.distribution)
         model.logger = self.logger
         self.timer.stage_start()
-        print(f'\n{'>'*10}{stage} started\n')
+        print(f'\n{'>'*15}{stage.capitalize()} started{'>'*15}\n')
 
     def _epoch_step(self, model, epoch_idx, dataset, stage):
-        if stage == 'train':
+        if stage != 'train':
             torch.set_grad_enabled(False)
             model.eval()
         else:
@@ -91,13 +88,12 @@ class Trainer():
         dataset_len = len(dataset)
         epoch_results = []
         for batch_idx, batch in enumerate(dataset):
-
             batch_output = self._batch_step(
                 model, epoch_idx, dataset_len, batch_idx, batch, stage)
             epoch_results.append(batch_output)
 
             # batch end hook
-            model.getattr(f'on_{stage}_batch_end')(batch_output)
+            getattr(model, f'on_{stage}_batch_end')(batch_output)
 
         torch.set_grad_enabled(True)
 
@@ -121,7 +117,7 @@ class Trainer():
             epoch_idx, self.timer.epoch_cost, self.logger.last_log)
 
     def _stage_end_process(self, model, stage):
-        model.getattr(f'on_{stage}_end')()
+        getattr(model, f'on_{stage}_end')()
         self.timer.stage_end()
         self.printer.stage_end_output(stage, self.timer.total_cost)
 
