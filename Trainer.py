@@ -14,7 +14,7 @@ from .Tools import to_device, model_distribute
 
 
 class Trainer():
-    def __init__(self, max_epochs, device='cpu', distribution=False, log_every_n_steps=50, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
+    def __init__(self, max_epochs, device='cpu', distribution=False, log_every_n_steps=50, disable_output=False, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
         '''
         the three fundermetal elements to a deep learning experiment: 
         1. timer: gives you the full control of how long the experiment takes
@@ -28,12 +28,13 @@ class Trainer():
         self.step_idx = 0
         self.log_every_n_steps = log_every_n_steps
         self.distribution = distribution
+        self.disable_output = disable_output
 
         if saving_folder is None:
             self.create_saving_folder()
         self.logger = Logger(self.cur_log_folder, log_name=log_name)
         self.timer = Timer()
-        self.printer = Printer(log_every_n_steps, max_epochs)
+        self.printer = Printer(log_every_n_steps, max_epochs, disable_output)
 
     def fit(self, model: Module, train_loader, val_loader=[]):
         self._stage_start_process(model, 'train')
@@ -81,7 +82,7 @@ class Trainer():
         model = model_distribute(model, self.device, self.distribution)
         model.logger = self.logger
         self.timer.stage_start()
-        print(f'\n{'>'*15}{stage.capitalize()} started{'>'*15}\n')
+        self.printer.stage_start_output(stage)
 
     def _epoch_step(self, model, epoch_idx, dataset, stage):
         if stage != 'train':

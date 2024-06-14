@@ -80,7 +80,7 @@ class Module(nn.Module):
 
     '''predict'''
     @abstractmethod
-    def predict_step(self, X):
+    def predict_step(self, batch):
         pass
 
     def log_dict(self, dict: Dict, on_step=False, on_epoch=True, prog_bar=True):
