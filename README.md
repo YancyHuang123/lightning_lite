@@ -26,6 +26,6 @@ LightningLite is a project that realizes Pytorch-lightning in minimal, readable 
 1. Install via source code
 ```
 cd <your project folder>
-git clone https://github.com/YancyHuang123/LightningLite.git
+git clone https://github.com/Yancy456/LightningLite.git
 ```
 
