@@ -36,10 +36,10 @@ class Printer():
     def stage_start_output(self, stage):
         if self.disable_output:
             return
-        print(f'\n{'>'*15}{stage.capitalize()} started{'>'*15}\n')
+        print(f"\n{'>'*15}{stage.capitalize()} started{'>'*15}\n")
 
     def stage_end_output(self, stage, consumption):
         if self.disable_output:
             return
         print(
-            f'\n{stage.capitalize()} completed. Time consumption:{consumption/60.:.02f}min\n{'>'*45}\n')
+            f"\n{stage.capitalize()} completed. Time consumption:{consumption/60.:.02f}min\n{'>'*45}\n")
