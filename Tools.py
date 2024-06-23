@@ -20,13 +20,13 @@ def to_device(batch, device):
                 item.append(y.to(device))
             items.append(item)
         else:
-            raise Exception('outputs of dataloader unsupported')
+            raise Exception("data type can't be moved to device")
     return tuple(items) if len(items) != 1 else items[0]
 
 
-def model_distribute(model: Module, device, distribution) -> Module:
+def model_distribute(model: Module, accelerator, distribution) -> Module:
     '''move and distribute model to device(s)'''
-    if device == 'gpu':
+    if accelerator == 'gpu':
         model.device = 'cuda'
         for key in model._modules:
             value = getattr(model, key)

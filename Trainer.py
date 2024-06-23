@@ -14,7 +14,7 @@ from .Tools import to_device, model_distribute
 
 
 class Trainer():
-    def __init__(self, max_epochs, device='cpu', distribution=False, log_every_n_steps=50, disable_output=False, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
+    def __init__(self, max_epochs, accelerator, devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
         '''
         the three fundermetal elements to a deep learning experiment: 
         1. timer: gives you the full control of how long the experiment takes
@@ -22,7 +22,8 @@ class Trainer():
         3. logger: stores full info of the whole experiment for later review
         '''
         self.max_epochs = max_epochs
-        self.device = device
+        self.device = devices
+        self.accelerator = accelerator
         self.log_folder = log_folder  # folder keeping all training logs
         self.cur_log_folder = saving_folder  # folder  keeping current training log
         self.step_idx = 0
@@ -79,7 +80,7 @@ class Trainer():
 
     def _stage_start_process(self, model, stage):
         # distribute model to accelerators
-        model = model_distribute(model, self.device, self.distribution)
+        model = model_distribute(model, self.accelerator, self.distribution)
         model.logger = self.logger
         self.timer.stage_start()
         self.printer.stage_start_output(stage)
