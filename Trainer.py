@@ -89,6 +89,7 @@ class Trainer():
             torch.set_grad_enabled(False)
             model.eval()
         else:
+            torch.set_grad_enabled(True)
             model.train()
 
         dataset_len = len(dataset)
@@ -105,8 +106,12 @@ class Trainer():
 
     def _batch_step(self, model, epoch_idx, dataset_len, batch_idx, batch, stage):
         batch = to_device(batch, model.device)
+        # some stage's api names are different
+        stage_ing = {'train': 'training',
+                     'test': 'test', 'validation': 'validation'}
         # DO NOT return tensors directly, this can lead to gpu menory shortage !!
-        result = model.training_step(batch, batch_idx)
+        result = getattr(model, f'{stage_ing[stage]}_step')(
+            batch, batch_idx)
         self.step_idx += 1
         model.current_step = self.step_idx
         self.printer.batch_output(

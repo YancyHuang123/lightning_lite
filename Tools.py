@@ -27,22 +27,25 @@ def to_device(batch, device):
 def model_distribute(model: LiteModule, accelerator, distribution) -> LiteModule:
     '''move and distribute model to device(s)'''
     if accelerator == 'gpu':
-        model.device = 'cuda'
-        for key in model._modules:
-            value = getattr(model, key)
-            if key not in model.cuda_ignore:
-                if key not in model.distribution_ignore:
-                    if distribution == False:
-                        value = value.to('cuda')
-                    else:
-                        value = nn.DataParallel(value).to('cuda')
+        device = 'cuda'
+    else:
+        device = 'cpu'
+    model.device = device
+    for key in model._modules:
+        value = getattr(model, key)
+        if key not in model.cuda_ignore:
+            if key not in model.distribution_ignore:
+                if distribution == False:
+                    value = value.to(device)
                 else:
-                    value = value.to('cuda')
-                setattr(model, key, value)
+                    value = nn.DataParallel(value).to(device)
+            else:
+                value = value.to(device)
+            setattr(model, key, value)
     return model
 
 
-#def create_saving_folder():
+# def create_saving_folder():
 #    time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 #    folder = self.log_folder
 #    os.makedirs(f'{folder}', exist_ok=True)

@@ -12,9 +12,9 @@ class LiteModule(nn.Module):
         self.current_epoch = 0
         self.current_step = 0
         self.device = 'cpu'
-        # save the names of attributes that you don't want to distribute to mutiple devices
+        # attributes that you don't want to distribute to mutiple devices
         self.distribution_ignore = []
-        self.cuda_ignore = []  # save the attributes that you don't want to move to cuda
+        self.cuda_ignore = []  # attributes that you don't want to move to cuda
         self.logger = None
 
     def save(self, save_folder):
