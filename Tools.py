@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import torch
 import torch.nn as nn
-from .Module import Module
+from .LiteModule import LiteModule
 
 
 def to_device(batch, device):
@@ -24,7 +24,7 @@ def to_device(batch, device):
     return tuple(items) if len(items) != 1 else items[0]
 
 
-def model_distribute(model: Module, accelerator, distribution) -> Module:
+def model_distribute(model: LiteModule, accelerator, distribution) -> LiteModule:
     '''move and distribute model to device(s)'''
     if accelerator == 'gpu':
         model.device = 'cuda'
@@ -42,9 +42,9 @@ def model_distribute(model: Module, accelerator, distribution) -> Module:
     return model
 
 
-def create_saving_folder():
-    time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    folder = self.log_folder
-    os.makedirs(f'{folder}', exist_ok=True)
-    os.mkdir(f"{folder}/{time}")
-    self.cur_log_folder = f"{folder}/{time}"
+#def create_saving_folder():
+#    time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+#    folder = self.log_folder
+#    os.makedirs(f'{folder}', exist_ok=True)
+#    os.mkdir(f"{folder}/{time}")
+#    self.cur_log_folder = f"{folder}/{time}"

@@ -1,5 +1,4 @@
-from abc import abstractmethod
-from ast import Module
+
 from datetime import datetime
 import os
 import time
@@ -7,7 +6,7 @@ import torch
 import torch.nn as nn
 
 from .Printer import Printer
-from .Module import Module
+from .LiteModule import LiteModule
 from .Logger import Logger
 from .Timer import Timer
 from .Tools import to_device, model_distribute
@@ -37,7 +36,7 @@ class Trainer():
         self.timer = Timer()
         self.printer = Printer(log_every_n_steps, max_epochs, disable_output)
 
-    def fit(self, model: Module, train_loader, val_loader=[]):
+    def fit(self, model: LiteModule, train_loader, val_loader=[]):
         self._stage_start_process(model, 'train')
 
         for epoch_idx in range(self.max_epochs):

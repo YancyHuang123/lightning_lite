@@ -6,7 +6,7 @@ import torch.nn as nn
 from LightningLite.Logger import Logger
 
 
-class Module(nn.Module):
+class LiteModule(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.current_epoch = 0
