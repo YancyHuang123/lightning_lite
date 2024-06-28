@@ -15,10 +15,10 @@ from .Tools import to_device, model_distribute
 class Trainer():
     def __init__(self, max_epochs, accelerator, devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
         '''
-        the three fundermetal elements to a deep learning experiment: 
-        1. timer: gives you the full control of how long the experiment takes
+        There are three fundermetal elements to a deep learning experiment: 
+        1. timer: gives you the full control of how long the experiment has taken and would take
         2. printer: tells you the real-time info of current experiment
-        3. logger: stores full info of the whole experiment for later review
+        3. logger: stores full info of the experiment for later review and ploting
         '''
         self.max_epochs = max_epochs
         self.device = devices
