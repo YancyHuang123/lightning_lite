@@ -12,10 +12,10 @@ def tensor_to_scale(dict: dict):
     return dict
 
 
-def add_epoch_suffix(dict: dict):
+def add_epoch_suffix(dict: dict, suffix: str):
     new_dict = {}
     for k, v in dict.items():
-        k = k + '_epoch'
+        k = k + suffix
         new_dict[k] = v
     return new_dict
 
@@ -28,23 +28,25 @@ class Logger():
         self.log_name = log_name
         self.last_log = {}
 
-    def add_epoch_log(self, dict):
+    def add_epoch_log(self, dict, suffix='_epoch'):
+        '''add dict to epcoh log'''
         dict = tensor_to_scale(dict)
         self.last_log = dict
-        dict = add_epoch_suffix(dict)
+        # add suffix to epoch coloumns for clearifing
+        dict = add_epoch_suffix(dict, suffix)
         new_row = pd.DataFrame(dict, index=[0])
         self.epoch_log = pd.concat(
             [self.epoch_log, new_row], ignore_index=True)
 
     def reduce_epoch_log(self, epoch=None, step=None):
-        '''reduce self.epoch_log and log it to self.log'''
+        '''reduce epoch log (self.epoch_log) and log it to main log (self.log)'''
         # the mean value of each column
         mu = self.epoch_log.mean(axis=0).to_frame().T
         self.last_log = mu.iloc[0].to_dict()
         mu['epoch'] = epoch  # add epoch_idx and step_idx info
         mu['step'] = step
 
-        # concatanate mean values to log  # type: ignore
+        # concatanate mean values to log
         self.log = pd.concat([self.log, mu], ignore_index=True)
 
         self.epoch_log = pd.DataFrame()  # clear epoch_log

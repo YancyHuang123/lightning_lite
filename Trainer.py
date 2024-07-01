@@ -9,13 +9,13 @@ from .Printer import Printer
 from .LiteModule import LiteModule
 from .Logger import Logger
 from .Timer import Timer
-from .Tools import to_device, model_distribute
+from .Tools import to_device, model_distribute, create_folder
 
 
 class Trainer():
-    def __init__(self, max_epochs, accelerator, devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, log_folder='lite_logs', saving_folder=None, log_name='log.csv') -> None:
+    def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
         '''
-        There are three fundermetal elements to a deep learning experiment: 
+        Trainer manages three fundermetal elements to a deep learning experiment: 
         1. timer: gives you the full control of how long the experiment has taken and would take
         2. printer: tells you the real-time info of current experiment
         3. logger: stores full info of the experiment for later review and ploting
@@ -23,16 +23,16 @@ class Trainer():
         self.max_epochs = max_epochs
         self.device = devices
         self.accelerator = accelerator
-        self.log_folder = log_folder  # folder keeping all training logs
-        self.cur_log_folder = saving_folder  # folder  keeping current training log
+        self.experiment_folder = experiment_floder  # folder keeps all experiments
+        self.cur_exper_folder = cur_exper_folder  # folder keeps current experiments
         self.step_idx = 0
         self.log_every_n_steps = log_every_n_steps
         self.distribution = distribution
         self.disable_output = disable_output
 
-        if saving_folder is None:
-            self.create_saving_folder()
-        self.logger = Logger(self.cur_log_folder, log_name=log_name)
+        self.cur_exper_folder_path = create_folder(
+            experiment_floder, cur_exper_folder)
+        self.logger = Logger(self.cur_exper_folder, log_name=log_name)
         self.timer = Timer()
         self.printer = Printer(log_every_n_steps, max_epochs, disable_output)
 
@@ -122,7 +122,7 @@ class Trainer():
         '''logging, printing, setting timer at the end of epoch'''
         self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
         self.logger.save_log()
-        model.save(self.cur_log_folder)
+        model.save(self.cur_exper_folder)
         self.timer.epoch_end()
         self.printer.epoch_end_output(
             epoch_idx, self.timer.epoch_cost, self.logger.last_log)
@@ -131,10 +131,3 @@ class Trainer():
         getattr(model, f'on_{stage}_end')()
         self.timer.stage_end()
         self.printer.stage_end_output(stage, self.timer.total_cost)
-
-    def create_saving_folder(self):
-        time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        folder = self.log_folder
-        os.makedirs(f'{folder}', exist_ok=True)
-        os.mkdir(f"{folder}/{time}")
-        self.cur_log_folder = f"{folder}/{time}"
