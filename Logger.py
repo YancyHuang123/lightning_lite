@@ -41,7 +41,7 @@ class Logger():
     def reduce_epoch_log(self, epoch=None, step=None):
         '''reduce epoch log (self.epoch_log) and log it to main log (self.log)'''
         # the mean value of each column
-        mu = self.epoch_log.mean(axis=0).to_frame().T
+        mu = self.epoch_log.mean(axis=0, skipna=True).to_frame().T
         self.last_log = mu.iloc[0].to_dict()
         mu['epoch'] = epoch  # add epoch_idx and step_idx info
         mu['step'] = step
