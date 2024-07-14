@@ -20,6 +20,9 @@ class Trainer():
         2. printer: tells you the real-time info of current experiment
         3. logger: stores full info of the experiment for later review and ploting
         '''
+
+        # TODO: cancel keeping results from step returns, leaving user to define in-class variables instead.
+
         self.max_epochs = max_epochs
         self.device = devices
         self.accelerator = accelerator
@@ -32,7 +35,7 @@ class Trainer():
 
         self.cur_exper_folder_path = create_folder(
             experiment_floder, cur_exper_folder)
-        self.logger = Logger(self.cur_exper_folder, log_name=log_name)
+        self.logger = Logger(self.cur_exper_folder_path, log_name=log_name)
         self.timer = Timer()
         self.printer = Printer(log_every_n_steps, max_epochs, disable_output)
 
@@ -58,7 +61,7 @@ class Trainer():
 
     def test(self, model, test_loader):
         self._stage_start_process(model, 'test')
-        for epoch_idx in range(self.max_epochs):
+        for epoch_idx in range(1):
             model.current_epoch = epoch_idx
             self.timer.epoch_start()
 
@@ -122,7 +125,7 @@ class Trainer():
         '''logging, printing, setting timer at the end of epoch'''
         self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
         self.logger.save_log()
-        model.save(self.cur_exper_folder)
+        model.save(self.cur_exper_folder_path)
         self.timer.epoch_end()
         self.printer.epoch_end_output(
             epoch_idx, self.timer.epoch_cost, self.logger.last_log)

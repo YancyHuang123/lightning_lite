@@ -10,6 +10,8 @@ def to_device(batch, device):
         batch: should be either of the following forms -- tensor / [tensor1, tensor2,...] / [[tensor1,tensor2..],[tensor1,tensor2..],...]
         return the same form of batch data with all tensor on the dedicated device
     '''
+    if device == 'cpu':
+        return batch
     items = []
     for x in batch:
         if torch.is_tensor(x):
@@ -20,7 +22,8 @@ def to_device(batch, device):
                 item.append(y.to(device))
             items.append(item)
         else:
-            raise Exception("data type can't be automatically moved to device")
+            raise Exception(
+                f"data type can't be automatically moved to device")
     return tuple(items) if len(items) != 1 else items[0]
 
 
