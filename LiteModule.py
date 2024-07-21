@@ -75,7 +75,7 @@ class LiteModule(nn.Module):
         pass
 
     @abstractmethod
-    def on_test_end(self, results):
+    def on_test_end(self, results: Optional[List] = None):
         pass
 
     '''predict'''

@@ -10,6 +10,8 @@ def to_device(batch, device):
         batch: should be either of the following forms -- tensor / [tensor1, tensor2,...] / [[tensor1,tensor2..],[tensor1,tensor2..],...]
         return the same form of batch data with all tensor on the dedicated device
     '''
+    if device == 'cpu':
+        return batch
     items = []
     for x in batch:
         if torch.is_tensor(x):
@@ -20,7 +22,8 @@ def to_device(batch, device):
                 item.append(y.to(device))
             items.append(item)
         else:
-            raise Exception("data type can't be moved to device")
+            raise Exception(
+                f"data type can't be automatically moved to device")
     return tuple(items) if len(items) != 1 else items[0]
 
 
@@ -45,9 +48,11 @@ def model_distribute(model: LiteModule, accelerator, distribution) -> LiteModule
     return model
 
 
-# def create_saving_folder():
-#    time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-#    folder = self.log_folder
-#    os.makedirs(f'{folder}', exist_ok=True)
-#    os.mkdir(f"{folder}/{time}")
-#    self.cur_log_folder = f"{folder}/{time}"
+def create_folder(experiment_folder='lite_logs', cur_exper_folder=None):
+    '''create folder for current experiment, and return the folder path'''
+    if cur_exper_folder is None:
+        time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        cur_exper_folder = f"{time}"
+    cur_exper_folder_path = os.path.join(experiment_folder, cur_exper_folder)
+    os.makedirs(cur_exper_folder_path, exist_ok=True)
+    return cur_exper_folder_path
