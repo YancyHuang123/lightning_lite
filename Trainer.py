@@ -9,7 +9,7 @@ from .Tools import to_device, model_distribute, create_folder
 
 
 class Trainer():
-    def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
+    def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, store_results=True, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
         '''
         Trainer manages three fundermetal elements to a deep learning experiment: 
         1. timer: gives you the full control of how long the experiment has taken and would take
@@ -28,9 +28,10 @@ class Trainer():
         self.log_every_n_steps = log_every_n_steps
         self.distribution = distribution
         self.disable_output = disable_output
+        self.store_results = store_results
 
         self.cur_exper_folder_path = create_folder(
-            experiment_floder, cur_exper_folder)
+            experiment_floder, cur_exper_folder) if self.store_results else None
         self.logger = Logger(self.cur_exper_folder_path, log_name=log_name)
         self.timer = Timer()
         self.printer = Printer(log_every_n_steps, max_epochs, disable_output)
@@ -119,9 +120,10 @@ class Trainer():
 
     def _epoch_end_process(self, model, epoch_idx):
         '''logging, printing, setting timer at the end of epoch'''
-        self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
-        self.logger.save_log()
-        model.save(self.cur_exper_folder_path)
+        if self.store_results:
+            self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
+            self.logger.save_log()
+            model.save(self.cur_exper_folder_path)
         self.timer.epoch_end()
         self.printer.epoch_end_output(
             epoch_idx, self.timer.epoch_cost, self.logger.last_log)
