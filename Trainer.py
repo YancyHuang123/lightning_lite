@@ -21,7 +21,7 @@ class Trainer():
         # TODO: cancel keeping results from step returns, leaving user to define in-class variables instead.
 
         self.max_epochs = max_epochs
-        self.device = devices
+        self.devices = devices
         self.accelerator = accelerator
         self.experiment_folder = experiment_floder  # folder keeps all experiments
         self.cur_exper_folder = cur_exper_folder  # folder keeps current experiments
@@ -121,13 +121,13 @@ class Trainer():
 
     def _epoch_end_process(self, model, epoch_idx):
         '''logging, printing, setting timer at the end of epoch'''
-        if self.store_results:
-            self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
-            self.logger.save_log()
-            model.save(self.cur_exper_folder_path)
+        self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
         self.timer.epoch_end()
         self.printer.epoch_end_output(
             epoch_idx, self.timer.epoch_cost, self.logger.last_log)
+        if self.store_results:
+            self.logger.save_log()
+            model.save(self.cur_exper_folder_path)
 
     def _stage_end_process(self, model, stage):
         getattr(model, f'on_{stage}_end')()
