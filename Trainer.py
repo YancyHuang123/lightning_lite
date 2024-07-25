@@ -9,7 +9,8 @@ from .Tools import to_device, model_distribute, create_folder
 
 
 class Trainer():
-    def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False, store_results=True, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
+    def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False,
+                 store_results=True, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
         '''
         Trainer manages three fundermetal elements to a deep learning experiment: 
         1. timer: gives you the full control of how long the experiment has taken and would take
@@ -85,12 +86,12 @@ class Trainer():
         self.printer.stage_start_output(stage)
 
     def _epoch_step(self, model, epoch_idx, dataset, stage):
-        if stage != 'train':
-            torch.set_grad_enabled(False)
-            model.eval()
-        else:
-            torch.set_grad_enabled(True)
-            model.train()
+        # if stage != 'train':
+        #    torch.set_grad_enabled(False)
+        #    model.eval()
+        # else:
+        #    torch.set_grad_enabled(True)
+        #    model.train()
 
         dataset_len = len(dataset)
         epoch_results = []
