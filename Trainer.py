@@ -12,14 +12,13 @@ class Trainer():
     def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False,
                  store_results=True, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
         '''
-        Trainer manages three fundermetal elements to a deep learning experiment: 
-        1. timer: gives you the full control of how long the experiment has taken and would take
-        2. printer: tells you the real-time info of current experiment
-        3. logger: stores full info of the experiment for later review and ploting
+        Trainer manages three fundermetal elements to any deep learning experiment: 
+        1. timer: tells you how long the experiment has taken and would take
+        2. printer: tells you the info of current experiment on the fly
+        3. logger: stores full info of the experiment for review and ploting
         '''
 
         # TODO: cancel keeping results from step returns, leaving user to define in-class variables instead.
-
         self.max_epochs = max_epochs
         self.devices = devices
         self.accelerator = accelerator
