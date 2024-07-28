@@ -27,12 +27,17 @@ def to_device(batch, device):
     return tuple(items) if len(items) != 1 else items[0]
 
 
-def model_distribute(model: LiteModule, accelerator, distribution) -> LiteModule:
+def model_distribute(model: LiteModule, accelerator, distribution, devices) -> LiteModule:
+    device = None
     '''move and distribute model to device(s)'''
     if accelerator == 'gpu':
+        '''select GPUs'''
+        # TODO: select GPUs. torch.cuda.set_device(device)
         device = 'cuda'
-    else:
+    elif accelerator == 'cpu':
         device = 'cpu'
+    else:
+        raise Exception('accelerator unsupproted')
     model.device = device
     for key in model._modules:
         value = getattr(model, key)

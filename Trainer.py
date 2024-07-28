@@ -16,8 +16,10 @@ class Trainer():
         1. timer: tells you how long the experiment has taken and would take
         2. printer: tells you the info of current experiment on the fly
         3. logger: stores full info of the experiment for review and ploting
-        '''
 
+        devices: the selected GPUs. For example, devices='0,1,2'
+        '''
+        # Multi-GPU training is still under developing!!! Unexpected bugs may occur.
         # TODO: cancel keeping results from step returns, leaving user to define in-class variables instead.
         self.max_epochs = max_epochs
         self.devices = devices
@@ -79,7 +81,8 @@ class Trainer():
 
     def _stage_start_process(self, model, stage):
         # distribute model to accelerators
-        model = model_distribute(model, self.accelerator, self.distribution)
+        model = model_distribute(
+            model, self.accelerator, self.distribution, self.devices)
         model.logger = self.logger
         self.timer.stage_start()
         self.printer.stage_start_output(stage)
