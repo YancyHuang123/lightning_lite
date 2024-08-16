@@ -1,10 +1,10 @@
 from datetime import datetime
 import os
 import torch
-from .Printer import Printer
+from .utils.Printer import Printer
 from .LiteModule import LiteModule
-from .Logger import Logger
-from .Timer import Timer
+from .utils.Logger import Logger
+from .utils.Timer import Timer
 from .Tools import to_device, model_distribute, create_folder
 
 

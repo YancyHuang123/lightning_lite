@@ -3,8 +3,7 @@ import pandas as pd
 import torch
 
 
-# 1.convert tensors contined in dict to scales.
-# 2.add '_epoch' to the reduced epoch data's name
+# convert tensors contined in dict to scales.
 def tensor_to_scale(dict: dict):
     for k, v in dict.items():
         if torch.is_tensor(v):
@@ -12,6 +11,7 @@ def tensor_to_scale(dict: dict):
     return dict
 
 
+# add '_epoch' to the reduced epoch data's name
 def add_epoch_suffix(dict: dict, suffix: str):
     new_dict = {}
     for k, v in dict.items():
