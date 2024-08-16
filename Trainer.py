@@ -12,16 +12,17 @@ class Trainer():
     def __init__(self, max_epochs=0, accelerator='cpu', devices='cpu', distribution=False, log_every_n_steps=50, disable_output=False,
                  store_results=True, experiment_floder='lite_logs', cur_exper_folder=None, log_name='log.csv') -> None:
         '''
-        Trainer manages three fundermetal elements to a deep learning experiment: 
-        1. timer: gives you the full control of how long the experiment has taken and would take
-        2. printer: tells you the real-time info of current experiment
-        3. logger: stores full info of the experiment for later review and ploting
+        Trainer manages three fundermetal elements to any deep learning experiment: 
+        1. timer: tells you how long the experiment has taken and would take
+        2. printer: tells you the info of current experiment on the fly
+        3. logger: stores full info of the experiment for review and ploting
+
+        devices: the selected GPUs. For example, devices='0,1,2'
         '''
-
+        # Multi-GPU training is still under developing!!! Unexpected bugs may occur.
         # TODO: cancel keeping results from step returns, leaving user to define in-class variables instead.
-
         self.max_epochs = max_epochs
-        self.device = devices
+        self.devices = devices
         self.accelerator = accelerator
         self.experiment_folder = experiment_floder  # folder keeps all experiments
         self.cur_exper_folder = cur_exper_folder  # folder keeps current experiments
@@ -80,7 +81,8 @@ class Trainer():
 
     def _stage_start_process(self, model, stage):
         # distribute model to accelerators
-        model = model_distribute(model, self.accelerator, self.distribution)
+        model = model_distribute(
+            model, self.accelerator, self.distribution, self.devices)
         model.logger = self.logger
         self.timer.stage_start()
         self.printer.stage_start_output(stage)
@@ -121,13 +123,13 @@ class Trainer():
 
     def _epoch_end_process(self, model, epoch_idx):
         '''logging, printing, setting timer at the end of epoch'''
-        if self.store_results:
-            self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
-            self.logger.save_log()
-            model.save(self.cur_exper_folder_path)
+        self.logger.reduce_epoch_log(epoch_idx, self.step_idx)
         self.timer.epoch_end()
         self.printer.epoch_end_output(
             epoch_idx, self.timer.epoch_cost, self.logger.last_log)
+        if self.store_results:
+            self.logger.save_log()
+            model.save(self.cur_exper_folder_path)
 
     def _stage_end_process(self, model, stage):
         getattr(model, f'on_{stage}_end')()
