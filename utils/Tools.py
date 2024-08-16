@@ -2,7 +2,7 @@ from datetime import datetime
 import os
 import torch
 import torch.nn as nn
-from .LiteModule import LiteModule
+from ..LiteModule import LiteModule
 
 
 def to_device(batch, device):

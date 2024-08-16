@@ -5,7 +5,7 @@ from .utils.Printer import Printer
 from .LiteModule import LiteModule
 from .utils.Logger import Logger
 from .utils.Timer import Timer
-from .Tools import to_device, model_distribute, create_folder
+from .utils.Tools import to_device, model_distribute, create_folder
 
 
 class Trainer():
